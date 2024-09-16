@@ -85,6 +85,8 @@ public sealed class PersonalInfo9SV(PersonalInfo fb) : IPersonalInfo
     public int FormStatsIndex { get; set; }
     public byte FormCount { get; set; } = 1;
 
+    public int BST => FB.Base.HP + FB.Base.ATK + FB.Base.DEF + FB.Base.SPE + FB.Base.SPA + FB.Base.SPD;
+
     public void Write(BinaryWriter bw)
     {
         bw.Write(FB.Base.HP);
@@ -138,7 +140,14 @@ public sealed class PersonalInfo9SV(PersonalInfo fb) : IPersonalInfo
         bw.Write(tmFlags);
         bw.Write(FB.KitakamiDex);
         bw.Write(FB.BlueberryDex);
+
+        // waste 2 bytes to get the struct to align to 0x50
+        bw.Write(GetEXP(BST, FB.EvoStage, FB.BaseEXPAddend));
+        bw.Write((ushort)0);
     }
+
+    private static ushort GetEXP(int bst, byte evoStage, short add)
+        => (ushort)(Math.Ceiling(bst * (1 + (3 * evoStage)) / 20d) + add);
 
     public static readonly ushort[] TMIndexes =
     [
