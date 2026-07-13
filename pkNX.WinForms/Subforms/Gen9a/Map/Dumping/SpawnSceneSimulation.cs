@@ -11,7 +11,7 @@ public sealed class SpawnSceneSimulation
 {
     public required string Name { get; init; }
     public required string[] Paths { get; init; }
-    public required Func<PackedVec3f, int> LocationNameFetch { get; init; }
+    public required Func<PackedVec3f, List<ushort>> LocationNameFetch { get; init; }
     public required FlatBufferSource Game { get; init; }
 
     public readonly Dictionary<string, SceneSpawner> SpawnerPositions = []; // scraped from Scene

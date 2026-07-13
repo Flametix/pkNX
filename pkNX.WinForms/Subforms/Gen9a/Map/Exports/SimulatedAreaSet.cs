@@ -29,65 +29,71 @@ public sealed class SimulatedAreaSet(SpawnRipper9a self)
                 if (encounters.Count == 0)
                     continue; // no encounters?
 
-                AddSpawnsToLocation(locationIndex, encounters);
-                AddSpawnsToMap(locationIndex, encounters, pos, spawnerData, count);
+                AddSpawnsToLocation(encounters, locationIndex);
+                AddSpawnsToMap(encounters, pos, spawnerData, count, locationIndex);
             }
         }
     }
 
-    private void AddSpawnsToLocation(int locationIndex, IEnumerable<EncountDataInfo> encounters)
+    private void AddSpawnsToLocation(IList<EncountDataInfo> encounters, params List<ushort> locationIndex)
     {
-        if (!Simple.TryGetValue(locationIndex, out var list))
-            Simple[locationIndex] = list = [];
-
-        foreach (var enc in encounters)
+        foreach (var location in locationIndex)
         {
-            if (enc.EncountDataId is not { } id)
-                continue;
-            if (!self.TryGetEncounter(id, out var slot))
-                continue;
+            if (!Simple.TryGetValue(location, out var list))
+                Simple[location] = list = [];
 
-            EncounterSlot9a.AddSlots(list, slot, enc);
+            foreach (var enc in encounters)
+            {
+                if (enc.EncountDataId is not { } id)
+                    continue;
+                if (!self.TryGetEncounter(id, out var slot))
+                    continue;
+
+                EncounterSlot9a.AddSlots(list, slot, enc);
+            }
         }
     }
 
-    private void AddSpawnsToMap(int locationIndex, IList<EncountDataInfo> encounters, SceneSpawner link, PokemonSpawnerData spawnerData, AppearanceInfo count)
+    private void AddSpawnsToMap(IList<EncountDataInfo> encounters, SceneSpawner link, PokemonSpawnerData spawnerData, AppearanceInfo count, params List<ushort> locationIndex)
     {
-        if (!Detailed.TryGetValue(locationIndex, out var list))
-            Detailed[locationIndex] = list = [];
-
-        var point = new FakeSpawner9a
+        foreach (var location in locationIndex)
         {
-            Link = link,
-            Location = self.GetLocationName(locationIndex),
-            SpawnCountMin = count.MinCount,
-            SpawnCountMax = count.MaxCount,
-            Cooldown = spawnerData.CoolTime.Time,
-            CooldownCondition = spawnerData.CoolTime.Condition,
+            if (!Detailed.TryGetValue(location, out var list))
+                Detailed[location] = list = [];
 
-            Conditions = spawnerData.ActivationConditionList.Select(z => z.Element).GetSummary(),
-        };
+            var point = new FakeSpawner9a
+            {
+                Link = link,
+                Location = self.GetLocationName(location),
+                SpawnCountMin = count.MinCount,
+                SpawnCountMax = count.MaxCount,
+                Cooldown = spawnerData.CoolTime.Time,
+                CooldownCondition = spawnerData.CoolTime.Condition,
 
-        // not a perfect approximate (time of day Pumpkaboo, weather) but close enough for rough rips.
-        var totalWeight = encounters.Sum(z => z.Weight);
+                Conditions = spawnerData.ActivationConditionList.Select(z => z.Element).GetSummary(),
+            };
 
-        foreach (var enc in encounters)
-        {
-            if (enc.EncountDataId is not { } id)
-                continue;
-            if (!self.TryGetEncounter(id, out var slot))
-                continue;
+            // not a perfect approximate (time of day Pumpkaboo, weather) but close enough for rough rips.
+            var totalWeight = encounters.Sum(z => z.Weight);
 
-            var detailed = DetailedSpawn9a.Create(enc, slot, totalWeight);
-            point.Spawns.Add(detailed);
+            foreach (var enc in encounters)
+            {
+                if (enc.EncountDataId is not { } id)
+                    continue;
+                if (!self.TryGetEncounter(id, out var slot))
+                    continue;
+
+                var detailed = DetailedSpawn9a.Create(enc, slot, totalWeight);
+                point.Spawns.Add(detailed);
+            }
+
+            if (point.Spawns.Count == 0)
+            {
+
+            }
+
+            list.Add(point);
         }
-
-        if (point.Spawns.Count == 0)
-        {
-
-        }
-
-        list.Add(point);
     }
 
     public IEnumerable<EncounterArea9a> ToAreas()

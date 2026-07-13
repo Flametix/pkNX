@@ -52,7 +52,7 @@ public sealed class SpawnExporter(string folder)
 
             // Flatten the spawner positions to a string, as passing in a FlatBuffer object doesn't serialize nicely.
             var transform = result.SpawnerPositions
-                .OrderBy(z => GetLocationName(result.LocationNameFetch(z.Value.Position)))
+                .OrderBy(z => GetLocationName(result.LocationNameFetch(z.Value.Position).First()))
                 .ThenBy(z => z.Key);
             var points = transform.Select(z => GetPositionString(result, z.Key, z.Value)).Order();
             ExportJson(points, "point_spawners", result.Name);
@@ -68,7 +68,7 @@ public sealed class SpawnExporter(string folder)
     private string GetPositionString(SpawnSceneSimulation result, string internalName, SceneSpawner point)
     {
         var location = result.LocationNameFetch(point.Position);
-        var name = GetLocationName(location);
+        var name = string.Join(", ", location.Select(z => (int)z).Select(GetLocationName));
         var hash = FnvHash.HashFnv1a_64(internalName);
         return $"{name} - {hash:X16} - {internalName} @ {point.Position}";
     }
