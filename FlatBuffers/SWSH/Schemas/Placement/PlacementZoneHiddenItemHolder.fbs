@@ -11,7 +11,7 @@ table PlacementZoneHiddenItem
     Field_00:PlacementZoneMetaTripleXYZ (required);
     Field_01:PlacementZoneHiddenItemValue (required);
     Field_02:[PlacementZoneHiddenItemChance] (required);
-    Field_03:int;
+    RespawnRate:int;
     Field_04:uint;
     Field_05:float;
 }
